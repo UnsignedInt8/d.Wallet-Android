@@ -32,4 +32,8 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.0'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.0'
     compile 'com.android.support:design:26.0.1'
+    implementation files('libs/core-lib.jar')
+
+    compile 'com.madgag.spongycastle:core:1.56.0.0'
+    compile 'com.madgag.spongycastle:prov:1.56.0.0'
 }
