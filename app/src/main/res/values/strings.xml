@@ -3,4 +3,7 @@
     <string name="app_tabs_wallets">Wallets</string>
     <string name="app_tabs_d_world">d-World</string>
     <string name="app_tabs_settings">Settings</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment"> </string>
 </resources>
