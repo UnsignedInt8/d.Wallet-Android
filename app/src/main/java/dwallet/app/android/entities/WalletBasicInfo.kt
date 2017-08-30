@@ -1,5 +1,6 @@
 package dwallet.app.android.entities
 
+import org.xutils.DbManager
 import org.xutils.db.annotation.Column
 import org.xutils.db.annotation.Table
 import java.util.*
@@ -10,10 +11,16 @@ import java.util.*
  */
 
 @Table(name = "basicinfo")
-class WalletBasicInfo {
+class WalletBasicInfo() {
 
     companion object {
         val single = WalletBasicInfo()
+    }
+
+    private var db: DbManager? = null
+
+    constructor(dbManager: DbManager) : this() {
+        db = dbManager
     }
 
     @Column(name = "id", isId = true, autoGen = true)
@@ -34,18 +41,26 @@ class WalletBasicInfo {
     @Column(name = "coin")
     lateinit var coin: String
 
-//    val externalKeys: List<Key>
-//        get() = SugarRecord.find(Key::class.java, "wallet_id = ? and usage = ?", id.toString(), "external")
-//
-//    val changeKeys: List<Key>
-//        get() = SugarRecord.find(Key::class.java, "wallet_id = ? and usage = ?", id.toString(), "change")
-//
-//    val importedKeys: List<Key>
-//        get() = SugarRecord.find(Key::class.java, "wallet_id = ? and usage = ?", id.toString(), "imported")
-//
+    val externalKeys = try {
+        db?.selector(WalletKey::class.java)?.where("usage", "=", "external")?.findAll()
+    } catch (ex: Exception) {
+        null
+    }
+
+    val changeKeys = try {
+        db?.selector(WalletKey::class.java)?.where("usage", "=", "change")?.findAll()
+    } catch (ex: Exception) {
+        null
+    }
+
+    val importedKeys = try {
+        db?.selector(WalletKey::class.java)?.where("usage", "=", "imported")?.findAll()
+    } catch (ex: Exception) {
+        null
+    }
+
 //    val txs: List<Tx>
 //        get() = SugarRecord.find(Tx::class.java, "wallet_id=? and utxo = true", id.toString())
-
 
 
 }

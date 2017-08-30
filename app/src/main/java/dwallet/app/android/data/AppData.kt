@@ -12,7 +12,7 @@ class AppData {
 
     companion object {
         val db by lazy {
-            val dbConfigs = DbManager.DaoConfig().setDbName("wallets1.db").setDbVersion(1)
+            val dbConfigs = DbManager.DaoConfig().setDbName("wallets2.db").setDbVersion(1)
             return@lazy x.getDb(dbConfigs)!!
         }
     }

@@ -10,6 +10,9 @@ import org.xutils.db.annotation.Table
 @Table(name = "keys")
 class WalletKey {
 
+    @Column(name = "id", isId = true, autoGen = true)
+    var id = 0L
+
     @Column(name = "value") // encrypted data
     lateinit var value: String
 

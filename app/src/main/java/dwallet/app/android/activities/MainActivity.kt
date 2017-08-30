@@ -10,6 +10,7 @@ import android.widget.TextView
 import dwallet.app.android.R
 import dwallet.app.android.data.AppData
 import dwallet.app.android.entities.WalletBasicInfo
+import dwallet.app.android.entities.WalletMerkleblock
 import dwallet.app.android.services.BlockchainSyncService
 import dwallet.core.crypto.Crypto
 
@@ -30,6 +31,12 @@ class MainActivity : AppCompatActivity() {
             val w = WalletBasicInfo()
             w.name = "xxx"
             AppData.db.saveOrUpdate(w)
+
+            val b = WalletMerkleblock()
+            b.hash = "xxx"
+            b.height = 1
+            b.merkleRoot = "xxx"
+            AppData.db.saveOrUpdate(b)
         }
 
         startService(Intent(this, BlockchainSyncService::class.java))
