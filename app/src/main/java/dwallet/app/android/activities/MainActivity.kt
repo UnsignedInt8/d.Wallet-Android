@@ -1,16 +1,16 @@
 package dwallet.app.android.activities
 
+import android.content.Intent
 import android.graphics.Typeface
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.support.design.widget.TabLayout
-import android.support.v4.view.ViewPager
+import android.util.Log
 import android.widget.TextView
+
 import dwallet.app.android.R
-import dwallet.app.android.adpaters.FragmentsPagerAdapter
-import dwallet.app.android.fragments.DWorldFragment
-import dwallet.app.android.fragments.SettingsFragment
-import dwallet.app.android.fragments.WalletsFragment
+import dwallet.app.android.data.AppData
+import dwallet.app.android.entities.WalletBasicInfo
+import dwallet.app.android.services.BlockchainSyncService
 import dwallet.core.crypto.Crypto
 
 class MainActivity : AppCompatActivity() {
@@ -23,6 +23,17 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initUI()
+
+        val ws = AppData.db.selector(WalletBasicInfo::class.java).findAll()
+
+        if (ws == null || ws.isEmpty()) {
+            val w = WalletBasicInfo()
+            w.name = "xxx"
+            AppData.db.saveOrUpdate(w)
+        }
+
+        startService(Intent(this, BlockchainSyncService::class.java))
+        Log.v("xxx", WalletBasicInfo.single.toString())
     }
 
     private fun initUI() {
@@ -34,4 +45,6 @@ class MainActivity : AppCompatActivity() {
 //        viewPager.adapter = adapter
 //        findViewById<TabLayout>(R.id.tabs).setupWithViewPager(viewPager)
     }
+
+
 }

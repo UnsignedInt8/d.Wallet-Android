@@ -36,5 +36,5 @@ dependencies {
     implementation files('libs/core-lib.jar')
     compile 'com.madgag.spongycastle:core:1.56.0.0'
     compile 'com.madgag.spongycastle:prov:1.56.0.0'
-    implementation 'com.github.satyan:sugar:1.5'
+    compile 'org.xutils:xutils:3.5.0'
 }
