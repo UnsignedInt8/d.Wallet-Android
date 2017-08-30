@@ -24,6 +24,10 @@
             android:exported="false"
             android:label="@string/app_service_blockchain_sync" />
 
+        <meta-data android:name="DATABASE" android:value="wallets.db" />
+        <meta-data android:name="VERSION" android:value="1" />
+        <meta-data android:name="QUERY_LOG" android:value="true" />
+        <meta-data android:name="DOMAIN_PACKAGE_NAME" android:value="dwallet.app.android" />
     </application>
 
 </manifest>
