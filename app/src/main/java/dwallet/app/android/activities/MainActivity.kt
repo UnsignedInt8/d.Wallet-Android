@@ -13,6 +13,7 @@ import dwallet.app.android.data.Walletbase
 import dwallet.app.android.entities.WalletBasicInfo
 import dwallet.app.android.entities.WalletMerkleblock
 import dwallet.app.android.services.BlockchainSyncService
+import dwallet.core.bitcoin.application.wallet.Wallet
 import dwallet.core.crypto.Crypto
 
 class MainActivity : AppCompatActivity() {
@@ -26,10 +27,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         initUI()
 
-        val ciphertext = Walletbase.encryptMsg("hello", "123")
-        Log.v("xxx", ciphertext)
-        val text = Walletbase.decryptMsg(ciphertext, "123")
-        Log.v("xxx", text)
+        val wname = "My Wallet"
+        if (Walletbase.testWalletExists(this, wname)) {
+            val w1 = Walletbase(wname, "")
+        } else {
+            val w2 = Walletbase(wname, "", Walletbase.createAsync("").first)
+        }
 
         val ws = AppData.db.selector(WalletBasicInfo::class.java).findAll()
 

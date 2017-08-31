@@ -8,7 +8,12 @@ import org.xutils.db.annotation.Table
  */
 
 @Table(name = "keys")
-class WalletKey {
+class WalletKey() {
+
+    constructor(value: String, usage: String) : this() {
+        this.value = value
+        this.usage = usage
+    }
 
     @Column(name = "id", isId = true, autoGen = true)
     var id = 0L

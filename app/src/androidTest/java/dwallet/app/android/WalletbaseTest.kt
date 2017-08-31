@@ -33,8 +33,8 @@ class WalletbaseTest {
     @Test
     fun testEncrypting() {
         val raw = "11223344"
-        val cipherText = WalletBasicInfo.encryptMsg(raw, "abc")
-        val text = WalletBasicInfo.decryptMsg(cipherText, "abc")
+        val cipherText = Walletbase.encryptMsg(raw, "abc")
+        val text = Walletbase.decryptMsg(cipherText, "abc")
         assertEquals(raw, text)
     }
 }

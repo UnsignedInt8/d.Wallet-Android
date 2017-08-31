@@ -71,30 +71,6 @@ class WalletBasicInfo() {
     companion object {
         val single = WalletBasicInfo()
 
-
-        fun encryptMsg(message: String, password: String): String {
-            val secret = SecretKeySpec(sha256(password.toByteArray()), "AES")
-            val cipher = Cipher.getInstance("AES/OFB/PKCS5Padding")
-            cipher!!.init(Cipher.ENCRYPT_MODE, secret, IvParameterSpec(sha1(password.toByteArray()).take(16).toByteArray()))
-            val cipherText = cipher.doFinal(message.toByteArray(charset("UTF-8")))
-            return BaseX.base64.encode(cipherText)
-        }
-
-        fun decryptMsg(cipherText: String, password: String): String {
-            val secret = SecretKeySpec(sha256(password.toByteArray()), "AES")
-            val cipher = Cipher.getInstance("AES/OFB/PKCS5Padding")
-            cipher!!.init(Cipher.DECRYPT_MODE, secret, IvParameterSpec(sha1(password.toByteArray()).take(16).toByteArray()))
-            return String(cipher.doFinal(BaseX.base64.decode(cipherText)))
-        }
-
-        fun fromWallet(wallet: Wallet, password: String): WalletBasicInfo {
-            val info = WalletBasicInfo()
-            info.coin = wallet.coin.name
-            info.creationTime = Date()
-            info.name = "My Wallet"
-            info.masterPrivKey = encryptMsg(wallet.masterXprvKey.serializePrivate(), password)
-            return info
-        }
     }
 
     fun toWallet() = Wallet.fromMasterXprvKey(masterPrivKey, externalKeys?.map { it.value } ?: listOf(), changeKeys?.map { it.value } ?: listOf(), importedKeys?.map { it.value } ?: listOf())
