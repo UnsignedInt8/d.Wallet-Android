@@ -19,7 +19,7 @@ import javax.crypto.spec.IvParameterSpec
 
 class Walletbase(name: String) {
 
-    val dbFilename = sha256(name.toByteArray()).take(4).toByteArray().toHexString() + ".db"
+    private val dbFilename = sha256(name.toByteArray()).take(4).toByteArray().toHexString() + ".db"
 
     private val db by lazy {
         val dbConfigs = DbManager.DaoConfig().setDbName(dbFilename).setDbVersion(1)
@@ -27,24 +27,15 @@ class Walletbase(name: String) {
     }
 
     companion object {
-        fun create(passphrase: String) {
+        fun create(passphrase: String): Pair<Wallet, String> {
+            Wallet.externalKeysAmount = 5
+            Wallet.changeKeysAmount = 10
+            val (wallet, mnemonic) = Wallet.create(passphrase)
 
+
+            return Pair(wallet, mnemonic)
         }
 
-        fun encryptMsg(message: String, password: String): String {
-            val secret = SecretKeySpec(sha256(password.toByteArray()), "AES")
-            val cipher = Cipher.getInstance("AES/OFB/PKCS5Padding")
-            cipher!!.init(Cipher.ENCRYPT_MODE, secret, IvParameterSpec(sha1(password.toByteArray()).take(16).toByteArray()))
-            val cipherText = cipher.doFinal(message.toByteArray(charset("UTF-8")))
-            return BaseX.base64.encode(cipherText)
-        }
-
-        fun decryptMsg(cipherText: String, password: String): String {
-            val secret = SecretKeySpec(sha256(password.toByteArray()), "AES")
-            val cipher = Cipher.getInstance("AES/OFB/PKCS5Padding")
-            cipher!!.init(Cipher.DECRYPT_MODE, secret, IvParameterSpec(sha1(password.toByteArray()).take(16).toByteArray()))
-            return String(cipher.doFinal(BaseX.base64.decode(cipherText)))
-        }
     }
 
     init {

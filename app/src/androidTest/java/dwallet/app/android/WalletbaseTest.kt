@@ -3,6 +3,7 @@ package dwallet.app.android
 import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4
 import dwallet.app.android.data.Walletbase
+import dwallet.app.android.entities.WalletBasicInfo
 import dwallet.core.crypto.Crypto
 
 import org.junit.Test
@@ -32,8 +33,8 @@ class WalletbaseTest {
     @Test
     fun testEncrypting() {
         val raw = "11223344"
-        val cipherText = Walletbase.encryptMsg(raw, "abc")
-        val text = Walletbase.decryptMsg(cipherText, "abc")
+        val cipherText = WalletBasicInfo.encryptMsg(raw, "abc")
+        val text = WalletBasicInfo.decryptMsg(cipherText, "abc")
         assertEquals(raw, text)
     }
 }
