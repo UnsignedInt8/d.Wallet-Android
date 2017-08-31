@@ -2,6 +2,7 @@ package dwallet.app.android.data
 
 import dwallet.app.android.entities.WalletBasicInfo
 import dwallet.core.bitcoin.application.wallet.Wallet
+import dwallet.core.crypto.sha1
 import dwallet.core.crypto.sha256
 import dwallet.core.extensions.toHexString
 import dwallet.core.utils.BaseX
@@ -9,6 +10,7 @@ import org.xutils.DbManager
 import org.xutils.x
 import javax.crypto.spec.SecretKeySpec
 import javax.crypto.Cipher
+import javax.crypto.spec.IvParameterSpec
 
 
 /**
@@ -31,16 +33,16 @@ class Walletbase(name: String) {
 
         fun encryptMsg(message: String, password: String): String {
             val secret = SecretKeySpec(sha256(password.toByteArray()), "AES")
-            val cipher = Cipher.getInstance("AES/ECB/PKCS5Padding")
-            cipher!!.init(Cipher.ENCRYPT_MODE, secret)
+            val cipher = Cipher.getInstance("AES/OFB/PKCS5Padding")
+            cipher!!.init(Cipher.ENCRYPT_MODE, secret, IvParameterSpec(sha1(password.toByteArray()).take(16).toByteArray()))
             val cipherText = cipher.doFinal(message.toByteArray(charset("UTF-8")))
             return BaseX.base64.encode(cipherText)
         }
 
         fun decryptMsg(cipherText: String, password: String): String {
             val secret = SecretKeySpec(sha256(password.toByteArray()), "AES")
-            val cipher = Cipher.getInstance("AES/ECB/PKCS5Padding")
-            cipher!!.init(Cipher.DECRYPT_MODE, secret)
+            val cipher = Cipher.getInstance("AES/OFB/PKCS5Padding")
+            cipher!!.init(Cipher.DECRYPT_MODE, secret, IvParameterSpec(sha1(password.toByteArray()).take(16).toByteArray()))
             return String(cipher.doFinal(BaseX.base64.decode(cipherText)))
         }
     }
