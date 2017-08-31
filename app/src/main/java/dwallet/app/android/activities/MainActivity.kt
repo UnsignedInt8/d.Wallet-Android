@@ -9,6 +9,7 @@ import android.widget.TextView
 
 import dwallet.app.android.R
 import dwallet.app.android.data.AppData
+import dwallet.app.android.data.Walletbase
 import dwallet.app.android.entities.WalletBasicInfo
 import dwallet.app.android.entities.WalletMerkleblock
 import dwallet.app.android.services.BlockchainSyncService
@@ -24,6 +25,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initUI()
+
+        val ciphertext = Walletbase.encryptMsg("hello", "123")
+        Log.v("xxx", ciphertext)
+        val text = Walletbase.decryptMsg(ciphertext, "123")
+        Log.v("xxx", text)
 
         val ws = AppData.db.selector(WalletBasicInfo::class.java).findAll()
 
