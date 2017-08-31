@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
         if (Walletbase.testWalletExists(this, wname)) {
             val w1 = Walletbase(wname, "")
         } else {
-            val w2 = Walletbase(wname, "", Walletbase.createAsync("").first)
+            val w2 = Walletbase(wname, "", Wallet.create("").first)
         }
 
         val ws = AppData.db.selector(WalletBasicInfo::class.java).findAll()

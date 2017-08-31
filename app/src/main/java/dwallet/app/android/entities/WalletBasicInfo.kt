@@ -20,7 +20,7 @@ import javax.crypto.spec.SecretKeySpec
 @Table(name = "basicinfo")
 class WalletBasicInfo() {
 
-    private var db: DbManager? = null
+    var db: DbManager? = null
 
     constructor(dbManager: DbManager) : this() {
         db = dbManager
@@ -44,29 +44,33 @@ class WalletBasicInfo() {
     @Column(name = "coin")
     lateinit var coin: String
 
-    val externalKeys = try {
-        db?.selector(WalletKey::class.java)?.where("usage", "=", "external")?.findAll()
-    } catch (ex: Exception) {
-        null
-    }
+    val externalKeys: List<WalletKey>?
+        get() = try {
+            db?.selector(WalletKey::class.java)?.where("usage", "=", "external")?.findAll()
+        } catch (ex: Exception) {
+            null
+        }
 
-    val changeKeys = try {
-        db?.selector(WalletKey::class.java)?.where("usage", "=", "change")?.findAll()
-    } catch (ex: Exception) {
-        null
-    }
+    val changeKeys: List<WalletKey>?
+        get() = try {
+            db?.selector(WalletKey::class.java)?.where("usage", "=", "change")?.findAll()
+        } catch (ex: Exception) {
+            null
+        }
 
-    val importedKeys = try {
-        db?.selector(WalletKey::class.java)?.where("usage", "=", "imported")?.findAll()
-    } catch (ex: Exception) {
-        null
-    }
+    val importedKeys: List<WalletKey>?
+        get() = try {
+            db?.selector(WalletKey::class.java)?.where("usage", "=", "imported")?.findAll()
+        } catch (ex: Exception) {
+            null
+        }
 
-    val txs = try {
-        db?.selector(WalletTx::class.java)?.where("utxo", "=", "true")?.findAll()
-    } catch (ex: Exception) {
-        null
-    }
+    val txs: List<WalletTx>?
+        get() = try {
+            db?.selector(WalletTx::class.java)?.where("utxo", "=", "true")?.findAll()
+        } catch (ex: Exception) {
+            null
+        }
 
     companion object {
         val single = WalletBasicInfo()

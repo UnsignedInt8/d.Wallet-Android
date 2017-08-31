@@ -26,15 +26,10 @@ class Walletbase {
 
     private var wallet: Wallet
 
-    private var dbFilename = ""
+    private var db: DbManager
 
     var name: String
         private set
-
-    private val db by lazy {
-        val dbConfigs = DbManager.DaoConfig().setDbName(dbFilename).setDbVersion(1)
-        return@lazy x.getDb(dbConfigs)
-    }
 
     companion object {
 
@@ -53,31 +48,35 @@ class Walletbase {
             return String(cipher.doFinal(BaseX.base64.decode(cipherText)))
         }
 
-        fun createAsync(passphrase: String): Pair<Wallet, String> {
-            Wallet.externalKeysAmount = 5
-            Wallet.changeKeysAmount = 10
-            return Wallet.create(passphrase)
-        }
-
         fun testWalletExists(ctx: Context, name: String): Boolean {
-            return ctx.databaseList().any { it == "${filenameToDatabaseName(name)}.db" }
+            val dbName = filenameToDatabaseName(name)
+            return ctx.databaseList().any { it == dbName }
         }
 
-        private fun filenameToDatabaseName(name: String) = sha256(name.toByteArray()).take(4).toByteArray().toHexString() + ".db"
+        private fun filenameToDatabaseName(name: String) = name + "_dwallet.db"
+
+        fun listAllWallets(context: Context) = context.databaseList().filter { it.endsWith("_dwallet.db") }.map { it.split("_dwallet").first() }
 
     }
 
     constructor(name: String, password: String) {
         this.name = name
-        this.dbFilename = filenameToDatabaseName(name)
+
+        val dbFilename = filenameToDatabaseName(name)
+        this.db = x.getDb(DbManager.DaoConfig().setDbName(dbFilename).setDbVersion(1))
+
         val info = db.findFirst(WalletBasicInfo::class.java)
-        this.wallet = Wallet.fromMasterXprvKey(info.masterPrivKey, info.externalKeys?.map { decryptMsg(it.value, password) } ?: listOf(), info.changeKeys?.map { decryptMsg(it.value, password) } ?: listOf(), info.importedKeys?.map { decryptMsg(it.value, password) } ?: listOf())!!
+        info.db = db
+        this.wallet = Wallet.fromMasterXprvKey(decryptMsg(info.masterPrivKey, password), info.externalKeys?.map { decryptMsg(it.value, password) } ?: listOf(), info.changeKeys?.map { decryptMsg(it.value, password) } ?: listOf(), info.importedKeys?.map { decryptMsg(it.value, password) } ?: listOf())!!
+        print(this.wallet)
     }
 
     constructor(name: String, password: String, wallet: Wallet) {
         this.wallet = wallet
-        this.dbFilename = filenameToDatabaseName(name)
         this.name = name
+
+        val dbFilename = filenameToDatabaseName(name)
+        this.db = x.getDb(DbManager.DaoConfig().setDbName(dbFilename).setDbVersion(1))
 
         val info = WalletBasicInfo(db)
         info.coin = wallet.coin.name

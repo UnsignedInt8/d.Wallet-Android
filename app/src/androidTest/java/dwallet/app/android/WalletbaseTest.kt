@@ -4,12 +4,15 @@ import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4
 import dwallet.app.android.data.Walletbase
 import dwallet.app.android.entities.WalletBasicInfo
+import dwallet.core.bitcoin.application.bip39.BIP39
 import dwallet.core.crypto.Crypto
 
 import org.junit.Test
 import org.junit.runner.RunWith
 
 import org.junit.Assert.*
+import java.security.SecureRandom
+import java.util.*
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -36,5 +39,11 @@ class WalletbaseTest {
         val cipherText = Walletbase.encryptMsg(raw, "abc")
         val text = Walletbase.decryptMsg(cipherText, "abc")
         assertEquals(raw, text)
+    }
+
+    @Test
+    fun testMnemonic() {
+        val seed = BIP39.mnemonicToSeed(BIP39.getMnemonic(SecureRandom.getSeed(32)))
+        assertEquals(64, seed.size)
     }
 }
