@@ -27,12 +27,16 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         initUI()
 
-        val wname = "My Wallet"
+        val wname = "My Wallet4"
         if (Walletbase.testWalletExists(this, wname)) {
+            Log.v("xxx", "exists")
             val w1 = Walletbase(wname, "")
         } else {
-            val w2 = Walletbase(wname, "", Wallet.create("").first)
+            Log.v("xxx", "new")
+            val w2 = Walletbase(wname, "")
         }
+
+        val aws = Walletbase.listAllWallets(this)
 
         val ws = AppData.db.selector(WalletBasicInfo::class.java).findAll()
 

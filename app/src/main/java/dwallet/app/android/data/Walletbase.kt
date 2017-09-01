@@ -3,10 +3,14 @@ package dwallet.app.android.data
 import android.content.Context
 import dwallet.app.android.entities.WalletBasicInfo
 import dwallet.app.android.entities.WalletKey
+import dwallet.app.android.entities.WalletTx
 import dwallet.core.bitcoin.application.wallet.Wallet
+import dwallet.core.bitcoin.protocol.structures.Transaction
 import dwallet.core.crypto.sha1
 import dwallet.core.crypto.sha256
+import dwallet.core.extensions.hexToByteArray
 import dwallet.core.extensions.toHexString
+import dwallet.core.infrastructure.Event
 import dwallet.core.utils.BaseX
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.async
@@ -22,14 +26,11 @@ import javax.crypto.spec.IvParameterSpec
  * Created by unsignedint8 on 8/30/17.
  */
 
-class Walletbase {
+class Walletbase(val name: String, password: String) : Event() {
 
     private var wallet: Wallet
 
     private var db: DbManager
-
-    var name: String
-        private set
 
     companion object {
 
@@ -59,39 +60,43 @@ class Walletbase {
 
     }
 
-    constructor(name: String, password: String) {
-        this.name = name
-
+    init {
         val dbFilename = filenameToDatabaseName(name)
         this.db = x.getDb(DbManager.DaoConfig().setDbName(dbFilename).setDbVersion(1))
 
-        val info = db.findFirst(WalletBasicInfo::class.java)
-        info.db = db
-        this.wallet = Wallet.fromMasterXprvKey(decryptMsg(info.masterPrivKey, password), info.externalKeys?.map { decryptMsg(it.value, password) } ?: listOf(), info.changeKeys?.map { decryptMsg(it.value, password) } ?: listOf(), info.importedKeys?.map { decryptMsg(it.value, password) } ?: listOf())!!
-        print(this.wallet)
+        var info = db.findFirst(WalletBasicInfo::class.java)
+        info?.db = db
+
+        if (info == null) {
+            val (wallet, mnemonic) = Wallet.create(password)
+            this.wallet = wallet
+
+            info = WalletBasicInfo(db)
+            info.coin = wallet.coin.name
+            info.creationTime = Date()
+            info.name = name
+            info.masterPrivKey = encryptMsg(wallet.masterXprvKey.serializePrivate(), password)
+            info.mnemonic = encryptMsg(mnemonic, password)
+
+            db.save(info)
+
+            wallet.externalPrivKeys.forEach { insertKey(encryptMsg(it.wif, password), "external") }
+            wallet.changePrivKeys.forEach { insertKey(encryptMsg(it.wif, password), "change") }
+            wallet.importedPrivKeys.forEach { insertKey(encryptMsg(it.wif, password), "imported") }
+        } else {
+            val wallet = Wallet.fromMasterXprvKey(decryptMsg(info.masterPrivKey, password), info.externalKeys?.map { decryptMsg(it.value, password) } ?: listOf(), info.changeKeys?.map { decryptMsg(it.value, password) } ?: listOf(), info.importedKeys?.map { decryptMsg(it.value, password) } ?: listOf())!!
+            this.wallet = wallet
+        }
+
+        prepareForSynchronization()
     }
 
-    constructor(name: String, password: String, wallet: Wallet) {
-        this.wallet = wallet
-        this.name = name
+    private fun insertKey(wif: String, usage: String) = db.save(WalletKey(wif, usage))
 
-        val dbFilename = filenameToDatabaseName(name)
-        this.db = x.getDb(DbManager.DaoConfig().setDbName(dbFilename).setDbVersion(1))
+    private fun prepareForSynchronization() {
+        val txs = db.selector(WalletTx::class.java).where("utxo", "=", "true").findAll()?.map { Transaction.fromBytes(it.raw.hexToByteArray()) } ?: listOf()
+        wallet.insertUtxos(txs)
 
-        val info = WalletBasicInfo(db)
-        info.coin = wallet.coin.name
-        info.creationTime = Date()
-        info.name = name
-        info.masterPrivKey = encryptMsg(wallet.masterXprvKey.serializePrivate(), password)
 
-        db.save(info)
-
-        wallet.externalPrivKeys.forEach { insertKey(encryptMsg(it.wif, password), "external") }
-        wallet.changePrivKeys.forEach { insertKey(encryptMsg(it.wif, password), "change") }
-        wallet.importedPrivKeys.forEach { insertKey(encryptMsg(it.wif, password), "imported") }
-    }
-
-    private fun insertKey(wif: String, usage: String) {
-        db.save(WalletKey(wif, usage))
     }
 }
