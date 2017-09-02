@@ -71,8 +71,7 @@ class Walletbase(val name: String, password: String, val coin: Coins = Coins.Bit
     private fun insertKey(wif: String, usage: String) = db.save(WalletKey(wif, usage))
 
     private fun initWallet(password: String) {
-        val dbFilename = filenameToDatabaseName(name)
-        this.db = x.getDb(DbManager.DaoConfig().setDbName(dbFilename).setDbVersion(1))
+        this.db = x.getDb(DbManager.DaoConfig().setDbName(filenameToDatabaseName(name)).setDbVersion(1))
 
         var info = db.findFirst(WalletBasicInfo::class.java)
         info?.db = db
@@ -103,7 +102,7 @@ class Walletbase(val name: String, password: String, val coin: Coins = Coins.Bit
     }
 
     private fun prepareForSynchronization() {
-        val peers = db.selector(WalletPeer::class.java).limit(30).orderBy("id", true).findAll()?.map { Pair(it.host, it.port) }?.toMutableList() ?: coinsBootstrapNodes[coin.name]
-
+        val peers = (db.selector(WalletPeer::class.java).limit(30).orderBy("id", true).findAll()?.map { Pair(it.host, it.port) }?.toMutableList() ?: coinsBootstrapNodes[coin.name])!!
+        (0 until peers.size).map {  }
     }
 }
