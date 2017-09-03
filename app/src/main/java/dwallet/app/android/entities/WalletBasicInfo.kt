@@ -47,6 +47,9 @@ class WalletBasicInfo() {
     @Column(name = "mnemonic")
     lateinit var mnemonic: String
 
+    @Column(name = "password")
+    lateinit var password: String
+
     val externalKeys: List<WalletKey>?
         get() = try {
             db?.selector(WalletKey::class.java)?.where("usage", "=", "external")?.findAll()

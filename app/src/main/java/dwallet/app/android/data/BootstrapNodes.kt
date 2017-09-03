@@ -8,7 +8,7 @@ object BootstrapNodes {
 
     val bitcoin = mutableListOf(Pair("212.51.147.176", 8333))
 
-    val bitcoinTestnet = mutableListOf(Pair("localhost", 19000))
+    val bitcoinTestnet = mutableListOf(Pair("192.168.0.102", 19000))
 
     val litecoin = mutableListOf<Pair<String, Int>>()
 }

@@ -1,5 +1,7 @@
 package dwallet.app.android.entities
 
+import dwallet.core.bitcoin.protocol.structures.Transaction
+import dwallet.core.extensions.toHexString
 import org.xutils.DbManager
 import org.xutils.db.annotation.Column
 import org.xutils.db.annotation.Table
@@ -16,6 +18,11 @@ class WalletTx() {
 
     constructor(dbManager: DbManager) : this() {
         db = dbManager
+    }
+
+    constructor(tx: Transaction) : this(){
+        this.txid = tx.id
+        this.raw = tx.toBytes().toHexString()
     }
 
     @Column(name = "utxo")

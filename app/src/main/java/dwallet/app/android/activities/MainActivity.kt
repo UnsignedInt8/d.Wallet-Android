@@ -13,6 +13,7 @@ import dwallet.app.android.data.Walletbase
 import dwallet.app.android.entities.WalletBasicInfo
 import dwallet.app.android.entities.WalletMerkleblock
 import dwallet.app.android.services.BlockchainSyncService
+import dwallet.core.bitcoin.application.wallet.Coins
 import dwallet.core.bitcoin.application.wallet.Wallet
 import dwallet.core.crypto.Crypto
 
@@ -27,14 +28,16 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         initUI()
 
-        val wname = "My Wallet4"
-        if (Walletbase.testWalletExists(this, wname)) {
-            Log.v("xxx", "exists")
-            val w1 = Walletbase(wname, "")
-        } else {
-            Log.v("xxx", "new")
-            val w2 = Walletbase(wname, "")
-        }
+        Walletbase("xx1", "xxx", Coins.BitcoinTestnet)
+
+//        val wname = "My Wallet4"
+//        if (Walletbase.testWalletExists(this, wname)) {
+//            Log.v("xxx", "exists")
+//            val w1 = Walletbase(wname, "")
+//        } else {
+//            Log.v("xxx", "new")
+//            val w2 = Walletbase(wname, "")
+//        }
 
         val aws = Walletbase.listAllWallets(this)
 

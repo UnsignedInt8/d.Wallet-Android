@@ -8,7 +8,12 @@ import org.xutils.db.annotation.Table
  */
 
 @Table(name = "peers")
-class WalletPeer {
+class WalletPeer() {
+
+    constructor(host: String, port: Int) : this() {
+        this.host = host
+        this.port = port
+    }
 
     @Column(isId = true, name = "id", autoGen = true)
     var id = 0L

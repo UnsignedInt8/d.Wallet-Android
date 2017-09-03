@@ -1,21 +1,23 @@
 package dwallet.app.android.data
 
 import android.content.Context
-import dwallet.app.android.entities.WalletBasicInfo
-import dwallet.app.android.entities.WalletKey
-import dwallet.app.android.entities.WalletPeer
-import dwallet.app.android.entities.WalletTx
+import android.util.Log
+import dwallet.app.android.entities.*
+import dwallet.core.bitcoin.application.spv.Network
+import dwallet.core.bitcoin.application.spv.SPVNode
 import dwallet.core.bitcoin.application.wallet.Coins
 import dwallet.core.bitcoin.application.wallet.Wallet
 import dwallet.core.bitcoin.protocol.structures.Transaction
+import dwallet.core.crypto.hash256
 import dwallet.core.crypto.sha1
 import dwallet.core.crypto.sha256
+import dwallet.core.extensions.ZEROHASH
 import dwallet.core.extensions.hexToByteArray
 import dwallet.core.extensions.toHexString
+import dwallet.core.extensions.toRandomList
 import dwallet.core.infrastructure.Event
 import dwallet.core.utils.BaseX
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.runBlocking
 import org.xutils.DbManager
 import org.xutils.x
 import java.util.*
@@ -61,6 +63,7 @@ class Walletbase(val name: String, password: String, val coin: Coins = Coins.Bit
         fun listAllWallets(context: Context) = context.databaseList().filter { it.endsWith("_dwallet.db") }.map { it.split("_dwallet").first() }
 
         val coinsBootstrapNodes = mapOf(Pair(Coins.Bitcoin.name, BootstrapNodes.bitcoin), Pair(Coins.BitcoinTestnet.name, BootstrapNodes.bitcoinTestnet), Pair(Coins.Litecoin.name, BootstrapNodes.litecoin))
+        val nodesNetwork = mapOf(Pair(Coins.Bitcoin.name, Network.BitcoinMain), Pair(Coins.BitcoinTestnet.name, Network.BitcoinTestnet), Pair(Coins.Litecoin.name, Network.Litecoin))
     }
 
     init {
@@ -86,6 +89,7 @@ class Walletbase(val name: String, password: String, val coin: Coins = Coins.Bit
             info.name = name
             info.masterPrivKey = encryptMsg(wallet.masterXprvKey.serializePrivate(), password)
             info.mnemonic = encryptMsg(mnemonic, password)
+            info.password = hash256(password.toByteArray()).toHexString()
 
             db.save(info)
 
@@ -93,6 +97,7 @@ class Walletbase(val name: String, password: String, val coin: Coins = Coins.Bit
             wallet.changePrivKeys.forEach { insertKey(encryptMsg(it.wif, password), "change") }
             wallet.importedPrivKeys.forEach { insertKey(encryptMsg(it.wif, password), "imported") }
         } else {
+            if (info.password != hash256(password.toByteArray()).toHexString()) throw Exception("password error")
             val wallet = Wallet.fromMasterXprvKey(decryptMsg(info.masterPrivKey, password), info.externalKeys?.map { decryptMsg(it.value, password) } ?: listOf(), info.changeKeys?.map { decryptMsg(it.value, password) } ?: listOf(), info.importedKeys?.map { decryptMsg(it.value, password) } ?: listOf(), Coins.values().singleOrNull { it.name == info.coin } ?: coin)!!
             this.wallet = wallet
         }
@@ -101,8 +106,29 @@ class Walletbase(val name: String, password: String, val coin: Coins = Coins.Bit
         wallet.insertUtxos(txs)
     }
 
-    private fun prepareForSynchronization() {
-        val peers = (db.selector(WalletPeer::class.java).limit(30).orderBy("id", true).findAll()?.map { Pair(it.host, it.port) }?.toMutableList() ?: coinsBootstrapNodes[coin.name])!!
-        (0 until peers.size).map {  }
+    private fun prepareForSynchronization() = runBlocking {
+        val latestBlocks = db.selector(WalletMerkleblock::class.java).orderBy("height", true).limit(3).findAll() ?: listOf()
+        val startHeight = latestBlocks.lastOrNull()?.height ?: 0
+        val startHash = latestBlocks.lastOrNull()?.hash ?: String.ZEROHASH
+
+        val peers = (db.selector(WalletPeer::class.java).limit(30).orderBy("id", true).findAll()?.map { Pair(it.host, it.port) }?.toMutableList() ?: coinsBootstrapNodes[coin.name])!!.toRandomList()
+        peers.forEach {
+            val node = SPVNode(nodesNetwork[coin.name]!!, wallet.dumpKeysToFilterItems(), startHeight, startHash)
+
+            node.onAddr { _, addrs -> addrs.map { db.save(WalletPeer(it.ip, it.port.toInt())) } }
+
+            node.onTx { _, tx ->
+                val isUserTx = wallet.insertUtxo(tx) || wallet.isUserTx(tx)
+                if (!isUserTx) return@onTx
+                Log.v("xxx", "balance: ${wallet.balance}")
+                db.save(WalletTx(tx))
+            }
+
+            node.onMerkleblock { _, merkleblock -> db.save(WalletMerkleblock(merkleblock)) }
+
+            node.connectAsync(it.first, it.second)
+        }
     }
+
+
 }
